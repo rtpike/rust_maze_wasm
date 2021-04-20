@@ -4,11 +4,8 @@ use std::collections::HashSet;
 use rand::Rng;
 use rand::seq::SliceRandom;
 
-use petgraph::Graph; // used for A*
+// used for A*
 use petgraph::graphmap::UnGraphMap;
-use petgraph::dot::{Dot, Config};
-//use petgraph::graph::{NodeIndex, UnGraph};
-use petgraph::data::FromElements;
 use petgraph::algo::{dijkstra, min_spanning_tree, astar};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -25,6 +22,8 @@ impl Directions {
         4
     }
 
+    /// get opposite direction
+    #[allow(dead_code)]
     fn opposite(self) -> Directions {
         match self {
             Directions::Up => Directions::Down,
@@ -34,6 +33,8 @@ impl Directions {
         }
     }
 
+    /// get random direction
+    #[allow(dead_code)]
     fn rand() -> Directions {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..Directions::len()) {
@@ -45,6 +46,7 @@ impl Directions {
         }
     }
 
+    // TODO: fix name
     fn to_array() -> [Directions; 4] {
         [Directions::Down, Directions::Up, Directions::Right, Directions::Left]
     }
@@ -87,14 +89,16 @@ pub struct Maze {
     height: u32,
     walls: HashMap<Cell, CellType>,
 }
-/// Maze DOCS (TODO)
+/// Maze DOCS
 impl Maze {
+    #[allow(dead_code)]
     pub fn new(width: u32, height: u32) -> Maze {
         let walls = HashMap::new();
         Maze{width, height, walls}
     }
 
     /// empty maze with side walls only
+    #[allow(dead_code)]
     pub fn default(width: u32, height: u32) -> Maze {
         let walls = HashMap::new();
         let mut maze = Maze{width, height, walls};
@@ -174,7 +178,7 @@ impl Maze {
     /// using Prim's algorithm.
     pub fn generate(width: u32, height: u32, seed: u64) -> Maze {
         let mut maze = Maze::filled(width, height);
-        let rng = rand::thread_rng(); // TODO: add seed
+
 
         let start_cell = (0, 0);
 
@@ -195,13 +199,16 @@ impl Maze {
                             in_maze.insert(side);
                         }
                     }
-
+                    /* FIXME
+                    let mut rng = rand::thread_rng(); // TODO: add seed
                     // create wall on the other size
-                    //if rng.gen_range(0..2) != 0 {
-                    //    if let Some(next) = maze.neighbour(cell, Directions::rand()) {
-                    //        in_maze.insert(next);
-                    //    }
-                    //}
+                    if !rng.gen_range(0..10) != 0 {
+                        if let Some(next) = maze.neighbour(cell, Directions::rand()) {
+                            in_maze.insert(next);
+                        }
+                    }
+
+                    */
 
                     maze.add_cell_walls_to_vec(&mut walls, neighbour);
                     maze.remove_wall(cell, wall);
@@ -212,16 +219,12 @@ impl Maze {
         maze
     }
 
-    // FIXME
+    /// get a room in a random direction
     fn add_cell_walls_to_vec(&self, walls: &mut Vec<(Cell, Directions)>, cell: Cell) {
         //walls.push((cell, Directions::Up));
         //walls.push((cell, Directions::Down));
         //walls.push((cell, Directions::Left));
         //walls.push((cell, Directions::Right));
-
-        //let direct = Directions::rand();
-        //walls.push((cell,direct));
-        //walls.push((cell,direct.opposite()));
 
         let mut rng = rand::thread_rng();
         let mut dlist = Directions::to_array();
@@ -235,22 +238,23 @@ impl Maze {
     /// of the `cell`'s neighbour, if it exists.
     fn remove_wall(&mut self, cell: Cell, wall: Directions) {
         match self.walls.get_mut(&cell) {
-            Some(walls) => {
-                self.add_cell(cell, CellType::Room); // FIXME
-
+            Some(_) => {
+                self.add_cell(cell, CellType::Room);
+/*
                 if let Some(neighbour) = self.neighbour(cell, wall) {
                     if let Some(neighbour_walls) = self.walls.get_mut(&neighbour) {
                         self.add_cell(neighbour, CellType::Room);
-                        //neighbour_walls.remove(&wall.opposite());
                     }
                 }
+
+ */
             }
             None => (),
         }
     }
 
 
-     /// TODO: find path between cells using A*
+     /// find path between cells using A*
      /// https://en.wikipedia.org/wiki/A*_search_algorithm
     pub fn find_path(&mut self, start: Cell, end: Cell, set_path: bool) -> Option<Vec<Cell>> {
 
@@ -262,7 +266,6 @@ impl Maze {
          println!("find_path: no path found"); //DEBUG
          return None;
         }
-
 
          let mut deps = UnGraphMap::<Cell, ()>::new();
          //let mut deps = GraphMap::<Cell, f32>::new();
@@ -277,17 +280,12 @@ impl Maze {
                  if let Some(nnode) = self.neighbour(cnode, *d) {
                      if self.walls.get(&nnode) == Some(&CellType::Room) {
 
-
                          //if !checked_nodes.contains(&neighbour) {  // for graph
                          if !deps.contains_node(nnode) {  // for graphmap
                              cells.push(nnode);
-                         } else {
-                             let nnode = deps.add_node(nnode);
                          }
                          deps.add_edge(cnode, nnode, ());
-                         //cells.push(nnode);
-                         //checked_nodes.insert(neighbour);  // for graph
-                         println!("{:?}", nnode);
+
                      }
                  }
              }
@@ -296,8 +294,8 @@ impl Maze {
          //println!("deps: {:#?}", deps); //DEBUG
 
          //let mst = UnGraph::<_, _>::from_elements(min_spanning_tree(&deps));
-         println!("__________________________________________\n\n{:?}",
-                  Dot::with_config(&deps, &[Config::EdgeNoLabel]));
+         //println!("__________________________________________\n\n{:?}",
+         //         Dot::with_config(&deps, &[Config::EdgeNoLabel]));
 
          let res = astar(&deps,
                          start,
@@ -305,11 +303,13 @@ impl Maze {
                          |_| 0,
                          |n| ((end.0 - n.0).pow(2) as f32 + (end.1 - n.1).pow(2) as f32).sqrt() as u32
          );
-         println!("\n\n{:?}", res);
+         //println!("\n\n{:?}", res);
          match res {
              Some((_,p)) => {
-                 for i in &p {
-                     self.add_cell(*i, CellType::Path);
+                 if set_path {
+                     for i in &p {
+                         self.add_cell(*i, CellType::Path);
+                     }
                  }
                  Some(p)
              },

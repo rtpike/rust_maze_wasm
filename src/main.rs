@@ -5,7 +5,7 @@ use maze::*;
 
 use std::error::Error;
 
-/// Modifed verstion of https://github.com/Lakret/gir/tree/master/mazes
+/// Modified version of https://github.com/Lakret/gir/tree/master/mazes
 
 fn main() {
     /*
@@ -44,7 +44,8 @@ fn main() {
     maze.find_path((0,0),(1,1), true);
     */
 
-    let mut maze = Maze::generate(25,25,0);
+    let mut maze = Maze::generate(30,30,0);
+    maze.add_cell((maze.width()-1,maze.height()-1), CellType::Room);
     maze.find_path((0,0),(maze.width()-1,maze.height()-1), true);
 
     //println!("Maze: {:?}", maze);
@@ -57,7 +58,7 @@ fn main() {
 }
 
 
-#[cfg(test)]
+#[cfg(test)] //TODO
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;

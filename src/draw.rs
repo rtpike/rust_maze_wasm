@@ -1,6 +1,5 @@
 
-use svg::node::element::path::Data;
-use svg::node::element::{Path, Rectangle,Text} ;
+use svg::node::element::{Rectangle,Text} ;
 use svg::Document;
 
 use crate::maze::{Maze, Cell, CellType};
@@ -14,7 +13,7 @@ pub fn draw(maze: &Maze) -> Document {
     for row in 0..maze.height() {
         for col in 0..maze.width() {
             let cell = (row, col);
-            add_cell_paths(&mut paths, &maze, cell, &maze[cell]);
+            add_cell_paths(&mut paths, cell, &maze[cell]);
         }
     }
 
@@ -23,18 +22,6 @@ pub fn draw(maze: &Maze) -> Document {
         .set("viewBox", (0, 0, width, height))
         .set("style", "background-color: white;");
     paths.into_iter().fold(document, |document, path| document.add(path))
-}
-
-fn make_line(from: (u32, u32), relative_to: (u32, u32), color: &str) -> Path {
-    let data = Data::new().move_to(from).line_by(relative_to);
-
-    Path::new()
-        .set("fill", "none")
-        .set("stroke", color)
-        .set("stroke-width", STROKE_WIDTH)
-        .set("stroke-linejoin", "square")
-        .set("stroke-linecap", "square")
-        .set("d", data)
 }
 
 fn make_rect(from: (u32, u32), color: &str) -> Rectangle {
@@ -49,6 +36,7 @@ fn make_rect(from: (u32, u32), color: &str) -> Rectangle {
         .set("y", y)
 }
 
+#[allow(dead_code)]
 fn make_text(from: (u32, u32), color: &str) -> Text {
     let (x,y ) = from;
     Text::new()
@@ -59,9 +47,8 @@ fn make_text(from: (u32, u32), color: &str) -> Text {
 }
 
 
-fn add_cell_paths(paths: &mut Vec<Rectangle>, maze: &Maze, (row, col): Cell, cell_type: &CellType) {
+fn add_cell_paths(paths: &mut Vec<Rectangle>, (row, col): Cell, cell_type: &CellType) {
     let left_corner = (col * CELL_SIDE, row * CELL_SIDE);
-    let (left_corner_x, left_corner_y) = left_corner;
 
     match cell_type {
         CellType::Wall => {
