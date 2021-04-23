@@ -2,7 +2,7 @@ mod draw;
 mod maze;
 use draw::draw;
 use maze::*;
-
+use std::env;
 use std::error::Error;
 
 /// Modified version of https://github.com/Lakret/gir/tree/master/mazes
@@ -44,7 +44,41 @@ fn main() {
     maze.find_path((0,0),(1,1), true);
     */
 
-    let mut maze = Maze::generate(30,30,0);
+    let args: Vec<String> = env::args().collect();
+    let mut filename: &str = "image.svg";
+    let mut width: u32 = 32;
+    let mut height: u32 = 32;
+    let mut parse_err = false;
+
+    println!("{:?}", args);
+    match args.len() {
+        1 => println!("using defaults arguments: {}x{} {}", width, height, filename),
+        3 => {
+            if let Ok(w) = args[1].parse::<u32>() {width=w;} else {
+                println!("Invalid width");
+                parse_err = true;
+            }
+            if let Ok(h) = args[2].parse::<u32>() {height=h;} else {
+                println!("Invalid height");
+                parse_err = true;
+            }
+        },
+        4 => {
+            filename = args[3].as_str();
+        },
+        _ => {
+            parse_err = true;
+        },
+    }
+
+    if parse_err {
+        println!("Usage: {} <width> <height> [filename]", args[0]);
+        std::process::exit(1);
+    }
+
+    println!("using arguments: {}x{} {}", width, height, filename);
+
+    let mut maze = Maze::generate(width,height,0);
     maze.add_cell((maze.width()-1,maze.height()-1), CellType::Room);
     maze.find_path((0,0),(maze.width()-1,maze.height()-1), true);
 
@@ -52,7 +86,7 @@ fn main() {
 
     //let t = Instant::now();
     let document = draw(&maze);
-    svg::save("image.svg", &document).unwrap();
+    svg::save(filename, &document).unwrap();
     println!("Saved to SVG.");
     //println!("Saved to SVG in {:?}.", t.elapsed());
 }

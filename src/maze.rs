@@ -140,32 +140,32 @@ impl Maze {
 
     /// Returns Cell in the given direction or None
     fn neighbour(&self, cell: Cell, direction: Directions) -> Option<Cell> {
-        let (row, col) = cell;
+        let (x, y) = cell;
         match direction {
             Directions::Up => {
-                if row > 0 {
-                    Some((row - 1, col))
+                if x > 0 {
+                    Some((x - 1, y))
                 } else {
                     None
                 }
             }
             Directions::Down => {
-                if row < self.height() - 1 {
-                    Some((row + 1, col))
+                if x < self.width() - 1 {
+                    Some((x + 1, y))
                 } else {
                     None
                 }
             }
             Directions::Left => {
-                if col > 0 {
-                    Some((row, col - 1))
+                if y > 0 {
+                    Some((x, y - 1))
                 } else {
                     None
                 }
             }
             Directions::Right => {
-                if col < self.width() - 1 {
-                    Some((row, col + 1))
+                if y < self.height() - 1 {
+                    Some((x, y + 1))
                 } else {
                     None
                 }
@@ -179,26 +179,40 @@ impl Maze {
     pub fn generate(width: u32, height: u32, seed: u64) -> Maze {
         let mut maze = Maze::filled(width, height);
 
-
         let start_cell = (0, 0);
-
         let mut in_maze = HashSet::new();
         in_maze.insert(start_cell);
-        let mut walls = vec![];
+        let mut walls: Vec<(Cell, Directions)>= vec![];
         maze.add_cell_walls_to_vec(&mut walls, start_cell);
 
-        while let Some((cell, wall)) = walls.pop() {
-            if let Some(neighbour) = maze.neighbour(cell, wall) {
+        while let Some((cell, direction)) = walls.pop() {
+            if let Some(neighbour) = maze.neighbour(cell, direction) {
                 //println!("neighbour: {:?}|{:?} -> {:?}", cell, wall, neighbour);
                 if !in_maze.contains(&neighbour) {
                     in_maze.insert(neighbour);
 
-                    //wall of the other sides
+                    // wall of the other sides
                     for i in 0..Directions::len()-1 {
-                        if let Some(side) = maze.neighbour(cell, Directions::index(wall.get_index() + i)) {
+                        if let Some(side) = maze.neighbour(cell, Directions::index(direction.get_index() + i)) {
                             in_maze.insert(side);
                         }
                     }
+
+                    // fill in corner with a wall
+/*
+                    if let Some(op_cell) = maze.neighbour(cell, direction.opposite()) {
+                        if let Some(side) = maze.neighbour(op_cell, Directions::index(direction.get_index() + 1)) {
+                            in_maze.insert(side);
+                            println!("found")
+                        }
+                        if let Some(side) = maze.neighbour(op_cell, Directions::index(direction.get_index() + 3)) {
+                            in_maze.insert(side);
+                        }
+                    }
+ */
+
+                    maze.add_cell(cell, CellType::Room);
+
                     /* FIXME
                     let mut rng = rand::thread_rng(); // TODO: add seed
                     // create wall on the other size
@@ -207,49 +221,29 @@ impl Maze {
                             in_maze.insert(next);
                         }
                     }
-
                     */
 
+                    // generate next directions
                     maze.add_cell_walls_to_vec(&mut walls, neighbour);
-                    maze.remove_wall(cell, wall);
                 }
             }
         }
-
         maze
     }
 
     /// get a room in a random direction
     fn add_cell_walls_to_vec(&self, walls: &mut Vec<(Cell, Directions)>, cell: Cell) {
-        //walls.push((cell, Directions::Up));
-        //walls.push((cell, Directions::Down));
-        //walls.push((cell, Directions::Left));
-        //walls.push((cell, Directions::Right));
-
+/*
+        walls.push((cell, Directions::Up));
+        walls.push((cell, Directions::Down));
+        walls.push((cell, Directions::Left));
+        walls.push((cell, Directions::Right));
+*/
         let mut rng = rand::thread_rng();
         let mut dlist = Directions::to_array();
         dlist.shuffle(&mut rng);
-        for i in dlist.iter() {
+        for i in &dlist {
             walls.push((cell, *i));
-        }
-    }
-
-    /// Removes `wall` from `cell`, and the corresponding wall
-    /// of the `cell`'s neighbour, if it exists.
-    fn remove_wall(&mut self, cell: Cell, wall: Directions) {
-        match self.walls.get_mut(&cell) {
-            Some(_) => {
-                self.add_cell(cell, CellType::Room);
-/*
-                if let Some(neighbour) = self.neighbour(cell, wall) {
-                    if let Some(neighbour_walls) = self.walls.get_mut(&neighbour) {
-                        self.add_cell(neighbour, CellType::Room);
-                    }
-                }
-
- */
-            }
-            None => (),
         }
     }
 
@@ -258,14 +252,14 @@ impl Maze {
      /// https://en.wikipedia.org/wiki/A*_search_algorithm
     pub fn find_path(&mut self, start: Cell, end: Cell, set_path: bool) -> Option<Vec<Cell>> {
 
-        let dist = ((end.0 - start.0).pow(2) as f32 + (end.1 - start.1).pow(2) as f32).sqrt();
-        println!("dist: {}", dist);
+         let dist = ((end.0 - start.0).pow(2) as f32 + (end.1 - start.1).pow(2) as f32).sqrt();
+         println!("Direct distance: {:.2}", dist);
 
-        // start or ends inside a wall
-        if self.walls.get(&start) == Some(&CellType::Wall) || self.walls.get(&end) == Some(&CellType::Wall) {
-         println!("find_path: no path found"); //DEBUG
-         return None;
-        }
+         // start or ends inside a wall
+         if self.walls.get(&start) == Some(&CellType::Wall) || self.walls.get(&end) == Some(&CellType::Wall) {
+             println!("find_path: no path found"); //DEBUG
+             return None;
+         }
 
          let mut deps = UnGraphMap::<Cell, ()>::new();
          //let mut deps = GraphMap::<Cell, f32>::new();
@@ -291,8 +285,8 @@ impl Maze {
              }
          }
 
+         // Print out graph in Graphviz text format
          //println!("deps: {:#?}", deps); //DEBUG
-
          //let mst = UnGraph::<_, _>::from_elements(min_spanning_tree(&deps));
          //println!("__________________________________________\n\n{:?}",
          //         Dot::with_config(&deps, &[Config::EdgeNoLabel]));
@@ -311,11 +305,11 @@ impl Maze {
                          self.add_cell(*i, CellType::Path);
                      }
                  }
+                 println!("Path distance:  {}", p.len());
                  Some(p)
              },
              _ => None,
          }
-
 
          // A*
          /*
@@ -329,14 +323,6 @@ impl Maze {
         */
 
     }
-
-
-
-    // find_path helper reconstruct_path
-    //fn rec_path(from: Cell, curr: Cell) -> Vec<Cell>{
-    //}
-
-
 }
 
 impl std::ops::Index<Cell> for Maze {

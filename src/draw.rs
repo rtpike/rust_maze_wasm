@@ -10,9 +10,9 @@ const STROKE_WIDTH: u32 = 29;
 pub fn draw(maze: &Maze) -> Document {
     let mut paths = vec![];
 
-    for row in 0..maze.height() {
-        for col in 0..maze.width() {
-            let cell = (row, col);
+    for w in 0..maze.width() {
+        for h in 0..maze.height() {
+            let cell= (w, h);
             add_cell_paths(&mut paths, cell, &maze[cell]);
         }
     }
@@ -47,8 +47,8 @@ fn make_text(from: (u32, u32), color: &str) -> Text {
 }
 
 
-fn add_cell_paths(paths: &mut Vec<Rectangle>, (row, col): Cell, cell_type: &CellType) {
-    let left_corner = (col * CELL_SIDE, row * CELL_SIDE);
+fn add_cell_paths(paths: &mut Vec<Rectangle>, (x, y): Cell, cell_type: &CellType) {
+    let left_corner = (x * CELL_SIDE, y * CELL_SIDE);
 
     match cell_type {
         CellType::Wall => {
