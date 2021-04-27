@@ -3,7 +3,6 @@ mod maze;
 use draw::draw;
 use maze::*;
 use std::env;
-use std::error::Error;
 
 /// Modified version of https://github.com/Lakret/gir/tree/master/mazes
 
@@ -92,16 +91,3 @@ fn main() {
 }
 
 
-#[cfg(test)] //TODO
-mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
-    #[test]
-    fn default() {
-        let mut maze = Maze::new(2,2);
-        maze.add_cell((0,0), CellType::Wall);
-        maze.add_cell((0,1), CellType::Wall);
-        assert_eq!(Maze::default(2,2);, maze);
-    }
-}

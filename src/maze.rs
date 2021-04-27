@@ -10,14 +10,15 @@ use petgraph::algo::{dijkstra, min_spanning_tree, astar};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum Directions {
-    Up,
     Down,
-    Left,
+    Up,
     Right,
+    Left,
 }
 
 impl Directions {
 
+    /// length: 4
     fn len() -> usize {
         4
     }
@@ -61,6 +62,7 @@ impl Directions {
         }
     }
 
+    /// get index value of enum
     fn get_index(&self) -> usize  {
         match &self {
             Directions::Down  => 0,
@@ -83,7 +85,7 @@ pub enum CellType {
 
 pub type Cell = (u32, u32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Maze {
     width: u32,
     height: u32,
@@ -176,7 +178,7 @@ impl Maze {
 
     /// Generates a Maze with `width` and `height`
     /// using Prim's algorithm.
-    pub fn generate(width: u32, height: u32, seed: u64) -> Maze {
+    pub fn generate(width: u32, height: u32, _seed: u64) -> Maze {
         let mut maze = Maze::filled(width, height);
 
         let start_cell = (0, 0);
@@ -331,6 +333,72 @@ impl std::ops::Index<Cell> for Maze {
         self
             .walls
             .get(&index)
-            .expect(&format!("Cell at {:?} doesn't exist.", &index))
+            .unwrap_or_else(|| panic!("Cell at {:?} doesn't exist.", &index))
     }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn maze_default() {
+        let mut maze = Maze::new(3,3);
+        maze.add_cell((0,0), CellType::Wall);
+        maze.add_cell((0,1), CellType::Wall);
+        maze.add_cell((0,2), CellType::Wall);
+        maze.add_cell((1,0), CellType::Wall);
+        maze.add_cell((1,1), CellType::Room);
+        maze.add_cell((1,2), CellType::Wall);
+        maze.add_cell((2,0), CellType::Wall);
+        maze.add_cell((2,1), CellType::Wall);
+        maze.add_cell((2,2), CellType::Wall);
+        assert_eq!(Maze::default(3,3), maze);
+    }
+
+    #[test]
+    fn maze_filled() {
+        let mut maze = Maze::new(3,3);
+        maze.add_cell((0,0), CellType::Wall);
+        maze.add_cell((0,1), CellType::Wall);
+        maze.add_cell((0,2), CellType::Wall);
+        maze.add_cell((1,0), CellType::Wall);
+        maze.add_cell((1,1), CellType::Wall);
+        maze.add_cell((1,2), CellType::Wall);
+        maze.add_cell((2,0), CellType::Wall);
+        maze.add_cell((2,1), CellType::Wall);
+        maze.add_cell((2,2), CellType::Wall);
+        assert_eq!(Maze::filled(3,3), maze);
+    }
+
+    #[test]
+    fn directions() {
+        assert_eq!(Directions::len(), 4);
+        assert_eq!(Directions::opposite(Directions::Right), Directions::Left);
+        assert_eq!(Directions::opposite(Directions::Up), Directions::Down);
+        assert_eq!(Directions::opposite(Directions::Left), Directions::Right);
+        assert_eq!(Directions::opposite(Directions::Down), Directions::Up);
+
+        // TODO: add rand()
+
+        assert_eq!(Directions::to_array(), [Directions::Down,Directions::Up,Directions::Right,Directions::Left]);
+
+        assert_eq!(Directions::index(0), Directions::Down);
+        assert_eq!(Directions::index(1), Directions::Up);
+        assert_eq!(Directions::index(2), Directions::Right);
+        assert_eq!(Directions::index(3), Directions::Left);
+        assert_eq!(Directions::index(4), Directions::Down);
+        assert_eq!(Directions::index(5), Directions::Up);
+        assert_eq!(Directions::index(6), Directions::Right);
+        assert_eq!(Directions::index(7), Directions::Left);
+
+        assert_eq!(Directions::Down.get_index(), 0);
+        assert_eq!(Directions::Up.get_index(), 1);
+        assert_eq!(Directions::Right.get_index(), 2);
+        assert_eq!(Directions::Left.get_index(), 3);
+    }
+
 }
