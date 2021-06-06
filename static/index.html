@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="#">
+    <title>Rust Maze</title>
+    <style>
+        #canvas {
+            outline: black 3px solid;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="800" height="800">
+    </canvas>
+    <script src="rust_maze_wasm.js"></script>
+</body>
+
+<script type="text/javascript">
+        function resize_canvas(){
+            canvas = document.getElementById("canvas");
+            size = Math.min(window.innerWidth, window.innerHeight);
+            canvas.width  = size;
+            canvas.height = size;
+        }
+        var canvas_size = Math.min(window.innerWidth, canvas.height);
+        window.addEventListener('resize', resize_canvas, false);
+</script>
+
+</html>

@@ -1,12 +1,15 @@
 [package]
-name = "rust_maze"
-version = "0.1.0"
-authors = ["rtpike <impressive.rtpike@gmail.com>"]
+name = "rust_maze_wasm"
+version = "0.2.0"
+authors = ["Russ P"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-svg = "0.9.1"
-rand = "0.8.3"
+#getrandom = { version = "0.2.3", features = ["js"] }
+#rand = "0.8.3"
 petgraph = "0.5.1"
+stdweb = "0.4.12"
+#wasm-bindgen = "0.2.44"
+#svg = "0.9.1"

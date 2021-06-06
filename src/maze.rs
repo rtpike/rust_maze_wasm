@@ -1,12 +1,29 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use rand::Rng;
-use rand::seq::SliceRandom;
+use stdweb::unstable::TryInto;
 
 // used for A*
 use petgraph::graphmap::UnGraphMap;
 use petgraph::algo::{dijkstra, min_spanning_tree, astar};
+
+/// get random number in range, 0  - (size -1)
+ fn rand_range(size: u32) -> u32 {
+     js!( return Math.floor(Math.random() * @{size}))
+         .try_into()
+         .unwrap()
+ }
+
+/// shuffle array
+fn rand_shuffle<T>(list: &mut [T]) {
+    for i in 0..list.len()*2 {
+        let rnd0 = rand_range(list.len() as u32) as usize;
+        let rnd1 = rand_range(list.len() as u32) as usize;
+        if rnd0 != rnd1 {
+            list.swap(rnd0, rnd1);
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum Directions {
@@ -37,8 +54,7 @@ impl Directions {
     /// get random direction
     #[allow(dead_code)]
     fn rand() -> Directions {
-        let mut rng = rand::thread_rng();
-        match rng.gen_range(0..Directions::len()) {
+        match rand_range(4) {
             0 => Directions::Down,
             1 => Directions::Up,
             2 => Directions::Right,
@@ -47,11 +63,12 @@ impl Directions {
         }
     }
 
-    // TODO: fix name
+    #[allow(dead_code)]
     fn to_array() -> [Directions; 4] {
         [Directions::Down, Directions::Up, Directions::Right, Directions::Left]
     }
 
+    #[allow(dead_code)]
     fn index(index: usize) -> Directions  {
         match index % Directions::len() {
             0 => Directions::Down,
@@ -63,6 +80,7 @@ impl Directions {
     }
 
     /// get index value of enum
+    #[allow(dead_code)]
     fn get_index(&self) -> usize  {
         match &self {
             Directions::Down  => 0,
@@ -116,6 +134,7 @@ impl Maze {
         maze
     }
 
+    #[allow(dead_code)]
      fn filled(width: u32, height: u32) -> Maze {
         let walls = HashMap::new();
         let mut maze = Maze{width, height, walls};
@@ -127,20 +146,24 @@ impl Maze {
         maze
     }
 
+    #[allow(dead_code)]
     pub fn add_cell(&mut self, cell: Cell, cell_type: CellType) -> &mut Maze {
         // TODO: check for valid Cell condiments
         self.walls.insert(cell, cell_type);
         self
     }
 
+    #[allow(dead_code)]
     pub fn width(&self) -> u32 {
         self.width
     }
+    #[allow(dead_code)]
     pub fn height(&self) -> u32 {
         self.height
     }
 
     /// Returns Cell in the given direction or None
+    #[allow(dead_code)]
     fn neighbour(&self, cell: Cell, direction: Directions) -> Option<Cell> {
         let (x, y) = cell;
         match direction {
@@ -178,6 +201,7 @@ impl Maze {
 
     /// Generates a Maze with `width` and `height`
     /// using Prim's algorithm.
+    #[allow(dead_code)]
     pub fn generate(width: u32, height: u32, _seed: u64) -> Maze {
         let mut maze = Maze::filled(width, height);
 
@@ -234,6 +258,7 @@ impl Maze {
     }
 
     /// get a room in a random direction
+    #[allow(dead_code)]
     fn add_cell_walls_to_vec(&self, walls: &mut Vec<(Cell, Directions)>, cell: Cell) {
 /*
         walls.push((cell, Directions::Up));
@@ -241,17 +266,17 @@ impl Maze {
         walls.push((cell, Directions::Left));
         walls.push((cell, Directions::Right));
 */
-        let mut rng = rand::thread_rng();
         let mut dlist = Directions::to_array();
-        dlist.shuffle(&mut rng);
+        rand_shuffle(&mut dlist);
         for i in &dlist {
             walls.push((cell, *i));
         }
     }
 
 
-     /// find path between cells using A*
-     /// https://en.wikipedia.org/wiki/A*_search_algorithm
+    /// find path between cells using A*
+    /// https://en.wikipedia.org/wiki/A*_search_algorithm
+    #[allow(dead_code)]
     pub fn find_path(&mut self, start: Cell, end: Cell, set_path: bool) -> Option<Vec<Cell>> {
 
          let dist = ((end.0 - start.0).pow(2) as f32 + (end.1 - start.1).pow(2) as f32).sqrt();
